@@ -1,78 +1,54 @@
-const socket = io("http://localhost:3001");
+document.addEventListener('DOMContentLoaded', function () {
+  const socket = io('http://127.0.0.1:3001');  
 
-const gameBoard = document.getElementById('gameBoard');
-const status = document.getElementById('status');
-const restart = document.getElementById('restart');
+  const joinButton = document.getElementById('joinGame');
+  const messageElement = document.getElementById('message');
+  const gameBoard = document.getElementById('gameBoard');
+  const gameState = document.getElementById('gameState'); 
+  let playerSymbol = '';  
 
-let currentPlayer = "X";  
-let board = Array(9).fill(null);  
-let gameOver = false; 
+  function displayMessage(message) {
+    messageElement.innerHTML = message;
+  }
 
-const checkWinner = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], 
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], 
-    [0, 4, 8], [2, 4, 6]              
-];
-
-function checkGameOver() {
-    for (const condition of checkWinner) {
-        const [a, b, c] = condition;
-        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-            gameOver = true;
-            status.textContent = `Jogador ${board[a]} venceu!`;
-            highlightWinner([a, b, c]);
-            return;
-        }
-    }
-    
-    if (board.every(cell => cell !== null)) {
-        gameOver = true;
-        status.textContent = "Empate!";
-    }
-}
-
-function highlightWinner(cells) {
-    cells.forEach(cellIndex => {
-        document.getElementById(`data-cell-${cellIndex}`).style.backgroundColor = '#90EE90'; 
+  if (joinButton) {
+    joinButton.addEventListener('click', () => {
+      socket.emit('joinGame');
+      displayMessage('Aguardando oponente...');
     });
-}
+  }
 
-function onCellClick(e) {
-    const cell = e.target;
-    const index = parseInt(cell.id.split('-')[2]);
+  socket.on('gameStarted', (data) => {
+    playerSymbol = data.symbol;  
+    displayMessage(`Você é o jogador ${playerSymbol}. Sua vez!`);
+    gameBoard.classList.remove('hidden');  
+    gameState.innerText = `Jogador ${playerSymbol}: sua vez de jogar!`;
+  });
 
-    if (board[index] || gameOver) {
-        return; 
+  socket.on('moveMade', (move) => {
+    updateBoard(move);  
+    gameState.innerText = 'Sua vez de jogar!';
+  });
+
+  socket.on('turn', (data) => {
+    if (data.symbol === playerSymbol) {
+      gameState.innerText = 'Sua vez de jogar!';
+    } else {
+      gameState.innerText = `Esperando oponente...`;
     }
+  });
 
-    board[index] = currentPlayer;
-    cell.textContent = currentPlayer;
-    cell.classList.add('taken');
-
-    checkGameOver();
-
-    if (!gameOver) {
-        currentPlayer = currentPlayer === "X" ? "O" : "X";
-        status.textContent = `Jogador ${currentPlayer}, é a sua vez!`;
+  window.makeMove = function (cellIndex) {
+    if (!gameBoard.classList.contains('hidden') && gameState.innerText.includes('Sua vez')) {
+      socket.emit('makeMove', { cellIndex, symbol: playerSymbol });
+      updateBoard({ cellIndex, symbol: playerSymbol });  
     }
-    socket.on("mensagensAnteriores", (messages) => {
-  messages.forEach((m) => printMessage(m));
+  };
+
+  function updateBoard(move) {
+    const { cellIndex, symbol } = move;
+    const cell = document.getElementById(`cell-${cellIndex}`);
+    cell.innerHTML = symbol;
+    cell.classList.add(symbol === 'X' ? 'x-class' : 'o-class');
+  }
 });
-}
-
-function restartGame() {
-    board = Array(9).fill(null);
-    gameOver = false;
-    currentPlayer = "X";
-    status.textContent = `Jogador ${currentPlayer}, é a sua vez!`;
-
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        cell.textContent = '';
-        cell.classList.remove('taken');
-        cell.style.backgroundColor = '#f0f0f0';  
-    });
-}
-
-gameBoard.addEventListener('click', onCellClick);
-restart.addEventListener('click', restartGame);

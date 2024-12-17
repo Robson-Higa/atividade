@@ -1,35 +1,38 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <script
-      src="https://cdn.socket.io/4.8.1/socket.io.min.js"
-      integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
-      crossorigin="anonymous"
-    ></script>
-    <title>Jogo da Velha</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Velha</title>
+  <link rel="stylesheet" href="/styles.css">
+
+  <script
+    src="https://cdn.socket.io/4.8.1/socket.io.min.js"
+    integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
+    crossorigin="anonymous"
+  ></script>
 </head>
 <body>
-    <h1>Jogo da Velha</h1>
 
-    <div id="status">Jogador X, é a sua vez!</div>
-    
-    <div id="gameBoard" class="game-board">
-        <div class="cell" id="data-cell-0"></div>
-        <div class="cell" id="data-cell-1"></div>
-        <div class="cell" id="data-cell-2"></div>
-        <div class="cell" id="data-cell-3"></div>
-        <div class="cell" id="data-cell-4"></div>
-        <div class="cell" id="data-cell-5"></div>
-        <div class="cell" id="data-cell-6"></div>
-        <div class="cell" id="data-cell-7"></div>
-        <div class="cell" id="data-cell-8"></div>
+  <div id="message"></div>
+
+  <button id="joinGame">Participar</button>
+  
+  <div id="gameBoard" class="hidden">
+    <div id="gameState"></div>
+    <div id="board">
+      <div class="cell" id="cell-1" onclick="makeMove(1)"></div>
+<div class="cell" id="cell-2" onclick="makeMove(2)"></div>
+<div class="cell" id="cell-3" onclick="makeMove(3)"></div>
+<div class="cell" id="cell-4" onclick="makeMove(4)"></div>
+<div class="cell" id="cell-5" onclick="makeMove(5)"></div>
+<div class="cell" id="cell-6" onclick="makeMove(6)"></div>
+<div class="cell" id="cell-7" onclick="makeMove(7)"></div>
+<div class="cell" id="cell-8" onclick="makeMove(8)"></div>
+<div class="cell" id="cell-9" onclick="makeMove(9)"></div>
     </div>
+  </div>
 
-    <button id="restart">Reiniciar Jogo</button>
-
-    <script src="index.js"></script>
+  <script src="/index.js"></script>
 </body>
 </html>
