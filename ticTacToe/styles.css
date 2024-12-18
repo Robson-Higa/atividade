@@ -38,7 +38,7 @@ body {
   display: none;
 }
 
-#board {
+#state {
   display: grid;
   grid-template-columns: repeat(3, 100px);
   grid-template-rows: repeat(3, 100px);
@@ -53,12 +53,13 @@ body {
   text-align: center;
   vertical-align: middle;
   font-size: 30px;
-  border: 1px solid #000;
+  border: 1px solid #eec407;
   cursor: pointer;
+  background-color: ;
 }
 
-.cell:hover {
-  background-color: #f0f0f0;
+.cell:focus{
+  background-color: #ec2727;
 }
 
 .cell:empty {
@@ -66,8 +67,17 @@ body {
 }
 
 #state {
-  font-size: 1.2em;
   margin-top: 10px;
   color: #555;
   text-align: center;
+}
+
+.x-class{
+  font-size: larger;
+  color: #000;
+}
+
+.o-class{
+  font-size: larger;
+  color: #000;
 }

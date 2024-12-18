@@ -30,39 +30,42 @@ io.on("connection", (socket) => {
 
         players[1].emit("gameStarted", {
           symbol: "O",
-          message: "Você é o jogador O. Sua vez!",
+          message: "Você é o jogador O.",
         })
 
         players[0].emit("gameStarted", {
           symbol: "X",
-          message: "Você é o jogador X. Sua vez!",
+          message: "Você é o jogador X.",
         })
       }
     }
   })
 
-  socket.on("makeMove", (move) => {
-    const { cellIndex, symbol } = move
-    console.log(move)
+ socket.on('makeMove', (move) => {
+  console.log(`Movimento recebido no servidor: ${JSON.stringify(move)}`); 
 
-    if (gameBoard[cellIndex] === "") {
-      gameBoard[cellIndex] = symbol
+  const { cellIndex, symbol } = move;
+  console.log(move)
 
-      socket.broadcast.emit("moveMade", { cellIndex, symbol })
+  if (gameBoard[cellIndex] === "") {
+    gameBoard[cellIndex] = symbol;
+    console.log(`Tabuleiro após movimento: ${gameBoard}`); 
 
-      const winner = checkWinner()
-      if (winner) {
-        io.emit("gameOver", `Jogador ${winner} venceu!`)
-        resetGame()
-      } else {
-        currentPlayerIndex = (currentPlayerIndex + 1) % 2
-        const nextPlayerSymbol = currentPlayerIndex === 0 ? "X" : "O"
-        io.emit("turn", { symbol: nextPlayerSymbol })
-      }
+    socket.broadcast.emit('moveMade', { cellIndex, symbol });
+
+    const winner = checkWinner();
+    if (winner) {
+      io.emit('gameOver', `Jogador ${winner} venceu!`);
+      resetGame();
+    } else {
+      currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+      const nextPlayerSymbol = currentPlayerIndex === 0 ? 'X' : 'O';
+      io.emit('turn', { symbol: nextPlayerSymbol });
     }
-  })
+  }
+});
 
-  socket.on("disconnect", () => {
+socket.on("disconnect", () => {
     console.log("Jogador desconectado")
     players = players.filter((player) => player.id !== socket.id)
   })
