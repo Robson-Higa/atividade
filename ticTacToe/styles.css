@@ -5,7 +5,6 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,20 +19,18 @@ body {
   color: #333;
 }
 
-#joinGame {
-  background-color: #4CAF50;
+#getIn {
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 15px 32px;
   text-align: center;
-  font-size: 1em;
   cursor: pointer;
   margin-bottom: 20px;
   border-radius: 5px;
-  transition: background-color 0.3s ease;
 }
 
-#joinGame:hover {
+#getIn:hover {
   background-color: #45a049;
 }
 
@@ -71,7 +68,7 @@ body {
   background-color: #f9f9f9;
 }
 
-#gameState {
+#state {
   font-size: 1.2em;
   margin-top: 10px;
   color: #555;

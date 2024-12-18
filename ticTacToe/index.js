@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
   const socket = io('http://127.0.0.1:3001');  
 
-  const joinButton = document.getElementById('joinGame');
+  const joinButton = document.getElementById('getIn');
   const messageElement = document.getElementById('message');
   const gameBoard = document.getElementById('gameBoard');
-  const gameState = document.getElementById('gameState'); 
-  let playerSymbol = '';  
+  const state = document.getElementById('state'); 
+  let character = '';  
 
   function displayMessage(message) {
     messageElement.innerHTML = message;
@@ -13,35 +13,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (joinButton) {
     joinButton.addEventListener('click', () => {
-      socket.emit('joinGame');
-      displayMessage('Aguardando oponente...');
+      socket.emit('getIn');
+      displayMessage('Aguardando...');
     });
   }
 
   socket.on('gameStarted', (data) => {
-    playerSymbol = data.symbol;  
-    displayMessage(`Você é o jogador ${playerSymbol}. Sua vez!`);
+    console.log(data)
+    character = data.symbol;  
+    displayMessage(`Você é o jogador ${character}. Sua vez!`);
     gameBoard.classList.remove('hidden');  
-    gameState.innerText = `Jogador ${playerSymbol}: sua vez de jogar!`;
+
   });
 
   socket.on('moveMade', (move) => {
     updateBoard(move);  
-    gameState.innerText = 'Sua vez de jogar!';
+    state.innerText = 'Sua vez de jogar!';
   });
 
   socket.on('turn', (data) => {
-    if (data.symbol === playerSymbol) {
-      gameState.innerText = 'Sua vez de jogar!';
+    if (data.symbol === character) {
+      state.innerText = 'Sua vez de jogar!';
     } else {
-      gameState.innerText = `Esperando oponente...`;
+      state.innerText = `Esperando oponente...`;
     }
   });
 
   window.makeMove = function (cellIndex) {
-    if (!gameBoard.classList.contains('hidden') && gameState.innerText.includes('Sua vez')) {
-      socket.emit('makeMove', { cellIndex, symbol: playerSymbol });
-      updateBoard({ cellIndex, symbol: playerSymbol });  
+    if (!gameBoard.classList.contains('hidden') && state.innerText.includes('Sua vez')) {
+      socket.emit('makeMove', { cellIndex, symbol: character });
+      updateBoard({ cellIndex, symbol: character });  
     }
   };
 
@@ -49,6 +50,5 @@ document.addEventListener('DOMContentLoaded', function () {
     const { cellIndex, symbol } = move;
     const cell = document.getElementById(`cell-${cellIndex}`);
     cell.innerHTML = symbol;
-    cell.classList.add(symbol === 'X' ? 'x-class' : 'o-class');
   }
 });
