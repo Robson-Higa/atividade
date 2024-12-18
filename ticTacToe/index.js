@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
   socket.on('gameStarted', (data) => {
     console.log(data)
     character = data.symbol;  
+    console.log(character)
     displayMessage(`Você é o jogador ${character}. Sua vez!`);
     gameBoard.classList.remove('hidden');  
 
@@ -50,5 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const { cellIndex, symbol } = move;
     const cell = document.getElementById(`cell-${cellIndex}`);
     cell.innerHTML = symbol;
+    
   }
 });

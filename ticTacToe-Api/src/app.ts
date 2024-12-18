@@ -1,6 +1,6 @@
 import express from "express"
 import { createServer } from "http"
-import { Server as SocketIOServer } from "socket.io"
+import { Socket, Server as SocketIOServer } from "socket.io"
 
 const app = express()
 
@@ -13,7 +13,7 @@ const io = new SocketIOServer(server, {
   },
 })
 
-let players: string[] = []
+let players: Socket[] = []
 let gameBoard: string[] = Array(9).fill("")
 let currentPlayerIndex = 0
 
@@ -22,29 +22,28 @@ io.on("connection", (socket) => {
 
   socket.on("getIn", () => {
     if (players.length < 2) {
-      players.push(socket.id)
+      players.push(socket)
       console.log(`Jogador ${socket.id} entrou no jogo.`)
 
       if (players.length === 2) {
         console.log(players)
 
-        socket.to(players[1]).emit("gameStarted", {
+        players[1].emit("gameStarted", {
           symbol: "O",
           message: "Você é o jogador O. Sua vez!",
         })
 
-        socket.to(players[0]).emit("gameStarted", {
+        players[0].emit("gameStarted", {
           symbol: "X",
           message: "Você é o jogador X. Sua vez!",
         })
-
-        
       }
     }
   })
 
   socket.on("makeMove", (move) => {
     const { cellIndex, symbol } = move
+    console.log(move)
 
     if (gameBoard[cellIndex] === "") {
       gameBoard[cellIndex] = symbol
@@ -65,7 +64,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Jogador desconectado")
-    players = players.filter((player) => player !== socket.id)
+    players = players.filter((player) => player.id !== socket.id)
   })
 })
 
