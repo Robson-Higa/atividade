@@ -39,17 +39,17 @@ webSocket.on('connection', (socket) => {
       }
     } 
   });
-   socket.on("restart", () => {
-    
-        gameState.players[1].emit("gameStarted", {
-          symbol: "O", 
-          message: "Você é o jogador O. Aguardando oponente...",
-        });
+  socket.on("restart", () => {    
+        
+    gameState.players[1].emit("gameStarted", {
+      symbol: "O", 
+      message: "Você é o jogador O. Aguardando oponente...",
+    });
 
-        gameState.players[0].emit("gameStarted", {
-          symbol: "X", 
-          message: "Você é o jogador X. Sua vez de jogar!",
-        });
+    gameState.players[0].emit("gameStarted", {
+      symbol: "X", 
+      message: "Você é o jogador X. Sua vez de jogar!",
+    });
   });
 
   socket.on('makeMove', (data) => {
@@ -60,16 +60,16 @@ webSocket.on('connection', (socket) => {
 
       const winner = checkWinner(gameState.board);
       if (winner) {
-        gameState.players.forEach(playerSocket => {
-          playerSocket.emit('gameEnded', { winner });  
+        gameState.players.forEach(player => {
+          player.emit('gameEnded', { winner });  
         });
         return resetGame(); 
       }
 
       gameState.currentPlayer = symbol === 'X' ? 'O' : 'X';
 
-      gameState.players.forEach(playerSocket => {
-        playerSocket.emit('updateBoard', gameState.board);
+      gameState.players.forEach(player => {
+        player.emit('updateBoard', gameState.board);
       });
     } else {
       socket.emit('error', 'Jogada inválida. Tente novamente.');
@@ -97,5 +97,9 @@ function checkWinner(board) {
 }
 
 function resetGame() {
-  gameState.board = ['', '', '', '', '', '', '', '', ''];  
+  
+ gameState.board = ['', '', '', '', '', '', '', '', '']; 
+  gameState.players.forEach(player => {
+        player.emit('updateBoard', gameState.board);
+      })
 }

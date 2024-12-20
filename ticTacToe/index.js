@@ -29,6 +29,8 @@ socket.on('gameStarted', (data) => {
   document.getElementById('status').textContent = data.message;
   character = data.symbol;  
   document.getElementById('gameBoard').classList.remove('hidden'); 
+  document.getElementById('getIn').classList.add('hidden'); 
+
 });
 
 function makeMove(cellIndex) {
@@ -53,10 +55,15 @@ socket.on('gameEnded', (data) => {
   document.getElementById('status').textContent = `${winner} ganhou a partida!`;
   document.getElementById('gameBoard').classList.add('hidden');  
   joinButton.disabled = false
-  document.getElementById('getIn').textContent = 'Reiniciar'
+  document.getElementById('getIn').classList.remove('hidden');
+  document.getElementById('getIn').classList.replace('teste', 'btnReiniciar');
+  document.getElementById('getIn').textContent = 'Reiniciar';
+  
+  let clickCount = 0;
   if (joinButton) {
   joinButton.addEventListener('click', () => {
-
+    clickCount++;
+    console.log(`${ clickCount }`)
     socket.emit('restart');  
     joinButton.disabled = true;  
   });
