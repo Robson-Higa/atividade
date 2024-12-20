@@ -28,6 +28,7 @@ socket.on('setPlayer', (data) => {
 socket.on('gameStarted', (data) => {
   document.getElementById('status').textContent = data.message;
   character = data.symbol;  
+ // console.log(data.symbol)
   document.getElementById('gameBoard').classList.remove('hidden'); 
   document.getElementById('getIn').classList.add('hidden'); 
 
@@ -58,6 +59,7 @@ socket.on('gameEnded', (data) => {
   document.getElementById('getIn').classList.remove('hidden');
   document.getElementById('getIn').classList.replace('teste', 'btnReiniciar');
   document.getElementById('getIn').textContent = 'Reiniciar';
+  //console.log()
   
   let clickCount = 0;
   if (joinButton) {
