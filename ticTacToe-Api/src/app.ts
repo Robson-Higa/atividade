@@ -1,105 +1,101 @@
-import express from "express"
-import { createServer } from "http"
-import { Socket, Server as SocketIOServer } from "socket.io"
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
-const app = express()
+const app = express();
 
-const server = createServer(app)
 
-const io = new SocketIOServer(server, {
+export const server = createServer(app);
+
+const webSocket = new Server(server, {
   cors: {
     origin: "http://127.0.0.1:5500",
-    methods: ["GET", "POST"],
   },
-})
+});
+let gameState = {
+  board: ['', '', '', '', '', '', '', '', ''],  
+  currentPlayer: 'X',  
+  players: [],  
+};
 
-let players: Socket[] = []
-let gameBoard: string[] = Array(9).fill("")
-let currentPlayerIndex = 0
+webSocket.on('connection', (socket) => {
+  console.log('Novo jogador conectado:', socket.id);
 
-io.on("connection", (socket) => {
-  console.log(`O jogador ${socket.id} se conectou`)
+     socket.on("getIn", () => {
+    if (gameState.players.length < 2) {
+      gameState.players.push(socket);  
+      console.log(`Jogador ${socket.id} entrou no jogo.`);
 
-  socket.on("getIn", () => {
-    if (players.length < 2) {
-      players.push(socket)
-      console.log(`Jogador ${socket.id} entrou no jogo.`)
+      if (gameState.players.length === 2) {
+        gameState.players[1].emit("gameStarted", {
+          symbol: "O", 
+          message: "Você é o jogador O. Aguardando oponente...",
+        });
 
-      if (players.length === 2) {
-        console.log(players)
-
-        players[1].emit("gameStarted", {
-          symbol: "O",
-          message: "Você é o jogador O.",
-        })
-
-        players[0].emit("gameStarted", {
-          symbol: "X",
-          message: "Você é o jogador X.",
-        })
+        gameState.players[0].emit("gameStarted", {
+          symbol: "X", 
+          message: "Você é o jogador X. Sua vez de jogar!",
+        });
       }
-    }
-  })
+    } 
+  });
+   socket.on("restart", () => {
+    
+        gameState.players[1].emit("gameStarted", {
+          symbol: "O", 
+          message: "Você é o jogador O. Aguardando oponente...",
+        });
 
- socket.on('makeMove', (move) => {
-  console.log(`Movimento recebido no servidor: ${JSON.stringify(move)}`); 
+        gameState.players[0].emit("gameStarted", {
+          symbol: "X", 
+          message: "Você é o jogador X. Sua vez de jogar!",
+        });
+  });
 
-  const { cellIndex, symbol } = move;
-  console.log(move)
+  socket.on('makeMove', (data) => {
+    const { cellIndex, symbol } = data;
 
-  if (gameBoard[cellIndex] === "") {
-    gameBoard[cellIndex] = symbol;
-    console.log(`Tabuleiro após movimento: ${gameBoard}`); 
+    if (gameState.board[cellIndex] === '' && gameState.currentPlayer === symbol) {
+      gameState.board[cellIndex] = symbol;
 
-    socket.broadcast.emit('moveMade', { cellIndex, symbol });
+      const winner = checkWinner(gameState.board);
+      if (winner) {
+        gameState.players.forEach(playerSocket => {
+          playerSocket.emit('gameEnded', { winner });  
+        });
+        return resetGame(); 
+      }
 
-    const winner = checkWinner();
-    if (winner) {
-      io.emit('gameOver', `Jogador ${winner} venceu!`);
-      resetGame();
+      gameState.currentPlayer = symbol === 'X' ? 'O' : 'X';
+
+      gameState.players.forEach(playerSocket => {
+        playerSocket.emit('updateBoard', gameState.board);
+      });
     } else {
-      currentPlayerIndex = (currentPlayerIndex + 1) % 2;
-      const nextPlayerSymbol = currentPlayerIndex === 0 ? 'X' : 'O';
-      io.emit('turn', { symbol: nextPlayerSymbol });
+      socket.emit('error', 'Jogada inválida. Tente novamente.');
     }
-  }
+  });
+
+  
 });
 
-socket.on("disconnect", () => {
-    console.log("Jogador desconectado")
-    players = players.filter((player) => player.id !== socket.id)
-  })
-})
+function checkWinner(board) {
+  const winningCombinations = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],  
+    [0, 4, 8], [2, 4, 6],             
+  ];
 
-function checkWinner(): string | null {
-  const winPatterns = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ]
-
-  for (let pattern of winPatterns) {
-    const [a, b, c] = pattern
-    if (
-      gameBoard[a] &&
-      gameBoard[a] === gameBoard[b] &&
-      gameBoard[a] === gameBoard[c]
-    ) {
-      return gameBoard[a]
+  for (let combination of winningCombinations) {
+    const [a, b, c] = combination;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+      return board[a];  
     }
   }
-  return null
+
+  return null;  
 }
 
 function resetGame() {
-  gameBoard = Array(9).fill("")
-  players = []
-  currentPlayerIndex = 0
+  gameState.board = ['', '', '', '', '', '', '', '', ''];  
 }
-
-export { app, server }

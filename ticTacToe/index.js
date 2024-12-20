@@ -1,71 +1,64 @@
 const socket = io('http://127.0.0.1:3001');  
 
-const joinButton = document.getElementById('getIn');
-const messageElement = document.getElementById('message');
-const gameBoard = document.getElementById('gameBoard');
-const state = document.getElementById('state'); 
-let character = '';  
-
-function displayMessage(message) {
-  messageElement.innerHTML = message;
-}
-
+const joinButton = document.getElementById('getIn'); 
+let character = 'X';  
 if (joinButton) {
   joinButton.addEventListener('click', () => {
-    socket.emit('getIn');
-    displayMessage('Aguardando...');
+    socket.emit('getIn');  
+    joinButton.disabled = true;  
   });
 }
+
+const boardElement = document.getElementById('board');
+
+for (let i = 0; i < 9; i++) {
+  const cell = document.createElement('div');
+  cell.classList.add('cell');
+  cell.dataset.index = i;  
+  cell.addEventListener('click', () => makeMove(i));  
+  boardElement.appendChild(cell);
+}
+
+socket.on('setPlayer', (data) => {
+  character = data.symbol; 
+  document.getElementById('status').textContent = `Sua vez de jogar! (Você é ${character})`;
+  document.getElementById('gameBoard').classList.remove('hidden');  
+});
 
 socket.on('gameStarted', (data) => {
-  console.log(data);
+  document.getElementById('status').textContent = data.message;
   character = data.symbol;  
-  console.log(character);
-  displayMessage(`Você é o jogador ${character}.`);
-  gameBoard.classList.remove('hidden');  
-  joinButton.classList.add('hidden');
-
+  document.getElementById('gameBoard').classList.remove('hidden'); 
 });
 
-socket.on('moveMade', (move) => {
-  console.log(`Movimento recebido do servidor: ${JSON.stringify(move)}`); // Para verificar os dados
-  updateBoard(move); 
-  state.innerText = `Agora é a vez de ${move.symbol === 'X' ? 'O' : 'X'}`;
-});
+function makeMove(cellIndex) {
+  if (!character) return;  
 
+  socket.emit('makeMove', { cellIndex, symbol: character });  
+}
 
-socket.on('turn', (data) => {
-  if (data.symbol === character) {
-     gameBoard.classList.remove('hidden'); 
-    state.innerText = 'Sua vez de jogar!';
-  } else {
-     gameBoard.classList.remove('hidden'); 
-    state.innerText = `Esperando oponente...`;
-  }
-});
-document.querySelectorAll('.cell').forEach(cell => {
-  cell.addEventListener('click', function () {
-    const cellIndex = this.getAttribute('data-index'); 
-    window.makeMove(cellIndex);
+socket.on('updateBoard', (newBoard) => {
+  const cells = document.querySelectorAll('.cell');
+  newBoard.forEach((symbol, index) => {
+    cells[index].textContent = symbol;  
   });
 });
 
-window.makeMove = function (cellIndex) {
-  if (!gameBoard.classList.contains('hidden')) {
-    console.log(cellIndex);
-    console.log(character);
-    gameBoard.classList.remove('hidden'); 
-    socket.emit('makeMove', { cellIndex, symbol: character });
-    updateBoard({ cellIndex, symbol: character });  
-  }
-};
+socket.on('error', (message) => {
+  document.getElementById('status').textContent = message; 
+});
 
+socket.on('gameEnded', (data) => {
+  const winner = data.winner;
+  document.getElementById('status').textContent = `${winner} ganhou a partida!`;
+  document.getElementById('gameBoard').classList.add('hidden');  
+  joinButton.disabled = false
+  document.getElementById('getIn').textContent = 'Reiniciar'
+  if (joinButton) {
+  joinButton.addEventListener('click', () => {
 
-function updateBoard(move) {
-  const { cellIndex, symbol } = move;
-  const cell = document.getElementById(`cell-${cellIndex}`);
-  
-  if (cell && !cell.innerHTML) { 
-    cell.innerHTML = symbol;  
+    socket.emit('restart');  
+    joinButton.disabled = true;  
+  });
 }
-}
+});
